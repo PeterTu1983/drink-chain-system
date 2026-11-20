@@ -1,0 +1,120 @@
+networks:
+  drink_chain_net:
+    driver: bridge
+
+volumes:
+  pg_ty1_data:
+  pg_ty2_data:
+  pg_ty3_data:
+  pg_tpe1_data:
+  pg_txg1_data:
+  pg_tnn1_data:
+
+x-branch-db: &branch-db
+  image: postgres:16-alpine
+  restart: unless-stopped
+  environment:
+    POSTGRES_USER: ${DB_USER:-chain_admin}
+    POSTGRES_PASSWORD: ${DB_PASSWORD:-chain_secret}
+  volumes:
+    - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+  networks:
+    - drink_chain_net
+
+services:
+  db-ty-1:
+    <<: *branch-db
+    container_name: db_ty_1
+    environment:
+      POSTGRES_DB: branch_ty_1
+      POSTGRES_USER: ${DB_USER:-chain_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-chain_secret}
+    volumes:
+      - pg_ty1_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5431:5432"
+
+  db-ty-2:
+    <<: *branch-db
+    container_name: db_ty_2
+    environment:
+      POSTGRES_DB: branch_ty_2
+      POSTGRES_USER: ${DB_USER:-chain_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-chain_secret}
+    volumes:
+      - pg_ty2_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+
+  db-ty-3:
+    <<: *branch-db
+    container_name: db_ty_3
+    environment:
+      POSTGRES_DB: branch_ty_3
+      POSTGRES_USER: ${DB_USER:-chain_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-chain_secret}
+    volumes:
+      - pg_ty3_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5433:5432"
+
+  db-tpe-1:
+    <<: *branch-db
+    container_name: db_tpe_1
+    environment:
+      POSTGRES_DB: branch_tpe_1
+      POSTGRES_USER: ${DB_USER:-chain_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-chain_secret}
+    volumes:
+      - pg_tpe1_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5434:5432"
+
+  db-txg-1:
+    <<: *branch-db
+    container_name: db_txg_1
+    environment:
+      POSTGRES_DB: branch_txg_1
+      POSTGRES_USER: ${DB_USER:-chain_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-chain_secret}
+    volumes:
+      - pg_txg1_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5435:5432"
+
+  db-tnn-1:
+    <<: *branch-db
+    container_name: db_tnn_1
+    environment:
+      POSTGRES_DB: branch_tnn_1
+      POSTGRES_USER: ${DB_USER:-chain_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-chain_secret}
+    volumes:
+      - pg_tnn1_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5436:5432"
+
+  web:
+    build: .
+    container_name: drink_chain_web
+    restart: unless-stopped
+    environment:
+      DB_USER: ${DB_USER:-chain_admin}
+      DB_PASSWORD: ${DB_PASSWORD:-chain_secret}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db-ty-1
+      - db-ty-2
+      - db-ty-3
+      - db-tpe-1
+      - db-txg-1
+      - db-tnn-1
+    networks:
+      - drink_chain_net
